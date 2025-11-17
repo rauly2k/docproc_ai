@@ -1,0 +1,44 @@
+# Core FastAPI
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
+pgvector==0.2.3
+
+# Google Cloud
+google-cloud-storage==2.10.0
+google-cloud-pubsub==2.18.4
+google-cloud-documentai==2.24.0
+google-cloud-aiplatform==1.38.0
+google-cloud-vision==3.4.5
+google-cloud-secret-manager==2.16.4
+
+# Firebase
+firebase-admin==6.3.0
+
+# AI/ML
+langchain==0.0.340
+langchain-google-vertexai==0.0.6
+
+# PDF processing
+pypdfform==1.4.30
+PyPDF2==3.0.1
+
+# Utilities
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+httpx==0.25.2
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+ruff==0.1.6
+mypy==1.7.1
