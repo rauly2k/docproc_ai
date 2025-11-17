@@ -1,0 +1,5 @@
+# Inherit from parent
+-r ../requirements.txt
+
+# Additional API-specific dependencies
+uvicorn[standard]==0.24.0
