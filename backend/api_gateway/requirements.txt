@@ -1,0 +1,2 @@
+# Inherit from parent
+-r ../requirements.txt
