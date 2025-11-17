@@ -1,3 +1,9 @@
+# Inherit from shared
+-r ../shared/requirements.txt
+
+# API Gateway specific
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
 # Inherit from parent
 -r ../requirements.txt
 

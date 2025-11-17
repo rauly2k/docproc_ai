@@ -1,0 +1,7 @@
+# Inherit from parent
+-r ../../shared/requirements.txt
+
+# Additional dependencies for RAG
+langchain==0.0.340
+langchain-google-vertexai==0.0.6
+tiktoken==0.5.1

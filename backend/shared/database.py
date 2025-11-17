@@ -14,12 +14,14 @@ from .config import get_settings
 
 settings = get_settings()
 
+# Create engine
 # Create database engine
 engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
     pool_size=5,
     max_overflow=10,
+    echo=settings.environment == "dev"
     echo=False
     max_overflow=10
     pool_size=settings.db_pool_size,
@@ -35,6 +37,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+def get_db() -> Generator[Session, None, None]:
+    """
+    Dependency for FastAPI to get database session.
+
+    Usage:
 def get_db():
     """Dependency for getting database session."""
 # Base class for models

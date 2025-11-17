@@ -2,6 +2,21 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import vertexai
+
+from backend.shared.config import get_settings
+from .routes import chat
+
+settings = get_settings()
+
+# Initialize Vertex AI
+vertexai.init(project=settings.project_id, location=settings.vertex_ai_location)
+
+# Create FastAPI app
+app = FastAPI(
+    title="Document AI API Gateway",
+    version="1.0.0",
+    description="AI-powered document processing platform"
 
 from backend.shared.config import get_settings
 from .routes import ocr
@@ -90,6 +105,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["*"],  # Configure this properly in production
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
@@ -155,6 +171,8 @@ async def health_check():
     }
 
 
+# Include routers
+app.include_router(chat.router, prefix="/v1/chat", tags=["Chat with PDF"])
 @app.get("/", tags=["System"])
 async def root():
     """Root endpoint."""
@@ -180,6 +198,7 @@ app.include_router(admin.router, prefix="/v1/admin", tags=["Admin"])
 
 if __name__ == "__main__":
     import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
     uvicorn.run(app, host=settings.api_host, port=settings.api_port)
     uvicorn.run(app, host="0.0.0.0", port=8000)
     uvicorn.run(

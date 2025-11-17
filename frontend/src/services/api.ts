@@ -19,6 +19,10 @@ class APIClient {
       },
     });
 
+    // Add auth interceptor
+    this.client.interceptors.request.use(
+      async (config) => {
+        // In a real app, get token from Firebase auth
     // Add auth token interceptor
     this.client.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken');
@@ -79,6 +83,9 @@ class APIClient {
     );
   }
 
+  // Document endpoints
+  async listDocuments(skip = 0, limit = 50) {
+    const response = await this.client.get('/documents', {
   // Invoice endpoints
   async getInvoice(documentId: string) {
     const response = await this.client.get(`/invoices/${documentId}`);
@@ -92,6 +99,30 @@ class APIClient {
     return response.data;
   }
 
+  async getDocument(documentId: string) {
+    const response = await this.client.get(`/documents/${documentId}`);
+    return response.data;
+  }
+
+  // Chat endpoints
+  async indexDocumentForChat(documentId: string) {
+    const response = await this.client.post(`/chat/${documentId}/index`);
+    return response.data;
+  }
+
+  async queryChatRAG(query: {
+    question: string;
+    document_ids?: string[];
+    max_chunks?: number;
+    model?: 'flash' | 'pro';
+  }) {
+    const response = await this.client.post('/chat/query', query);
+    return response.data;
+  }
+
+  async getDocumentChunks(documentId: string) {
+    const response = await this.client.get(`/chat/${documentId}/chunks`);
+    return response.data;
   async deleteDocument(documentId: string) {
     const response = await this.client.delete(`/v1/documents/${documentId}`);
     return response.data;
