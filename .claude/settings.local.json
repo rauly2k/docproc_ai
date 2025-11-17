@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "SlashCommand(/superpowers:write-plan Create a complete, task-by-task implementation plan for the Document AI SaaS platform based on the technical_specification.md file. The plan should be optimized for a solo Python developer building an all-Python stack on Google Cloud Platform. Include:\n\n1. Detailed task breakdown for all 7 implementation phases (Phase 0-6)\n2. Exact file paths and complete code examples for each component\n3. Terraform configurations for all GCP services (Cloud Run, Cloud SQL, Pub/Sub, Storage, etc.)\n4. Database schema SQL with Alembic migrations\n5. FastAPI boilerplate for API Gateway and all 6 worker services\n6. Docker configurations for each service\n7. GitHub Actions CI/CD workflows\n8. React frontend structure with Firebase Auth integration\n9. Step-by-step deployment commands (gcloud, terraform, docker)\n10. Environment configuration templates\n11. Testing strategies for each phase\n12. Troubleshooting guides for common issues\n\nThe plan should have bite-sized tasks that can be completed in 2-4 hours each, with clear dependencies and verification steps. Include all necessary commands, configuration files, and code snippets so another AI or developer can execute the plan without needing to make architectural decisions.)",
+      "Skill(superpowers:writing-plans)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
