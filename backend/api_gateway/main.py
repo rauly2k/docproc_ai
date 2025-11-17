@@ -1,3 +1,23 @@
+"""API Gateway - Main FastAPI application."""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from backend.shared.config import get_settings
+from routes import invoices
+
+settings = get_settings()
+
+# Create FastAPI app
+app = FastAPI(
+    title=settings.api_title,
+    version=settings.api_version,
+    description="AI-powered document processing API"
 """
 Anima X API Gateway - Main FastAPI application.
 
@@ -63,6 +83,23 @@ app.add_middleware(
 )
 
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {
+        "status": "healthy",
+        "service": "api-gateway",
+        "version": settings.api_version
+    }
+
+
+@app.get("/")
+async def root():
+    """Root endpoint."""
+    return {
+        "message": "Document AI API",
+        "version": settings.api_version,
+        "docs_url": "/docs"
 # Global exception handlers
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -112,6 +149,7 @@ async def root():
 
 
 # Include routers
+app.include_router(invoices.router, prefix="/v1/invoices", tags=["Invoices"])
 app.include_router(auth.router, prefix="/v1/auth", tags=["Authentication"])
 app.include_router(documents.router, prefix="/v1/documents", tags=["Documents"])
 app.include_router(invoices.router, prefix="/v1/invoices", tags=["Invoices"])
@@ -124,6 +162,7 @@ app.include_router(admin.router, prefix="/v1/admin", tags=["Admin"])
 
 if __name__ == "__main__":
     import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
