@@ -1,5 +1,8 @@
 """SQLAlchemy database models."""
 
+from sqlalchemy import (
+    Column, String, Integer, BigInteger, Boolean, DateTime, Date,
+    Text, DECIMAL, ForeignKey, Index
 from sqlalchemy import Column, String, Integer, BigInteger, Boolean, DateTime, Text, DECIMAL, Date, JSON, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID, INET, JSONB, VECTOR
 from sqlalchemy.orm import relationship
@@ -37,11 +40,14 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID, JSONB, INET
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
+import uuid
+from datetime import datetime
 
 from .database import Base
 
 
 class Tenant(Base):
+    """Multi-tenant organization."""
     """Tenant table for multi-tenancy."""
     """Tenant model for multi-tenancy."""
     """Tenant table for multi-tenancy."""
@@ -52,6 +58,9 @@ class Tenant(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
     subdomain = Column(String(100), unique=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    settings = Column(JSONB, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     settings = Column(JSONB, default={})
@@ -70,6 +79,7 @@ class Tenant(Base):
 
 
 class User(Base):
+    """User account."""
     """User table (linked to Firebase Auth)."""
     __tablename__ = "users"
 
@@ -118,6 +128,9 @@ class User(Base):
     tenant = relationship("Tenant", back_populates="users")
     documents = relationship("Document", back_populates="user")
 
+    # Indexes
+    __table_args__ = (
+        Index("idx_user_tenant_email", "tenant_id", "email", unique=True),
     __table_args__ = (
         Index("idx_users_tenant_email", "tenant_id", "email", unique=True),
 
@@ -144,6 +157,7 @@ class Document(Base):
 
 
 class Document(Base):
+    """Uploaded document."""
     """Document table (all uploaded documents)."""
     """Documents table for all uploaded documents."""
     """All uploaded documents."""
@@ -154,6 +168,7 @@ class Document(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
+    # Metadata
     # Document metadata
     filename = Column(String(500), nullable=False)
     original_filename = Column(String(500))
@@ -167,6 +182,7 @@ class Document(Base):
     gcs_processed_path = Column(Text)
 
     # Processing status
+    status = Column(String(50), default="uploaded")
     status = Column(String(50), default="uploaded")  # 'uploaded', 'processing', 'completed', 'failed'
     processing_started_at = Column(DateTime(timezone=True))
     processing_completed_at = Column(DateTime(timezone=True))
@@ -196,6 +212,9 @@ class Document(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="documents")
     user = relationship("User", back_populates="documents")
+    summary = relationship("DocumentSummary", back_populates="document", uselist=False)
+
+    # Indexes
     chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
     summaries = relationship("DocumentSummary", back_populates="document", cascade="all, delete-orphan")
     invoice_data = relationship("InvoiceData", back_populates="document", uselist=False)
@@ -230,6 +249,8 @@ class InvoiceData(Base):
     )
 
 
+class DocumentSummary(Base):
+    """Document summary."""
 class DocumentChunk(Base):
     """Document chunks table for RAG (with vector embeddings)."""
 class InvoiceData(Base):
@@ -334,6 +355,9 @@ class DocumentSummary(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
 
     summary = Column(Text, nullable=False)
+    model_used = Column(String(100))
+    word_count = Column(Integer)
+    key_points = Column(JSONB)
     model_used = Column(String(100))  # 'gemini-1.5-flash', 'claude-3-sonnet', etc.
     word_count = Column(Integer)
     key_points = Column(JSONB)  # Structured bullet points
@@ -341,6 +365,11 @@ class DocumentSummary(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
+    document = relationship("Document", back_populates="summary")
+
+
+class OCRResult(Base):
+    """OCR text extraction result."""
     document = relationship("Document", back_populates="ocr_results")
 
 
@@ -370,6 +399,10 @@ class OCRResult(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
 
     extracted_text = Column(Text, nullable=False)
+    confidence_score = Column(DECIMAL(5, 4))
+    page_count = Column(Integer)
+    ocr_method = Column(String(50))
+
     confidence_score = Column(DECIMAL(5, 4))  # 0.0 to 1.0
     page_count = Column(Integer)
     ocr_method = Column(String(50))  # 'document-ai', 'vision-api', 'gemini-vision'
@@ -379,6 +412,9 @@ class OCRResult(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
+
+class AuditLog(Base):
+    """Audit log for compliance."""
     # Relationships
     document = relationship("Document", back_populates="summaries")
 
@@ -545,6 +581,9 @@ class AuditLog(Base):
     ip_address = Column(INET)
     user_agent = Column(Text)
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Indexes
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     created_at = Column(DateTime, default=datetime.utcnow)
 

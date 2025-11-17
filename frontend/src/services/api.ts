@@ -1,3 +1,9 @@
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/v1';
+
+class APIClient {
+  private client;
 /**
  * API Client for Document AI Platform
  * API client for backend communication
@@ -19,6 +25,9 @@ class APIClient {
       },
     });
 
+    // Add auth token to requests
+    this.client.interceptors.request.use((config) => {
+      const token = localStorage.getItem('auth_token');
     // Add auth interceptor
     this.client.interceptors.request.use(
       async (config) => {
@@ -33,6 +42,26 @@ class APIClient {
     });
   }
 
+  // Summary endpoints
+  async generateSummary(documentId: string, options: {
+    model_preference?: 'auto' | 'flash' | 'pro';
+    summary_type?: 'concise' | 'detailed';
+  }) {
+    const response = await this.client.post(
+      `/summaries/${documentId}/generate`,
+      options
+    );
+    return response.data;
+  }
+
+  async getSummary(documentId: string) {
+    const response = await this.client.get(`/summaries/${documentId}`);
+    return response.data;
+  }
+
+  async listSummaries(skip = 0, limit = 50) {
+    const response = await this.client.get('/summaries', {
+      params: { skip, limit },
   // ===== OCR Methods =====
 
   async getOCRResult(documentId: string) {
@@ -60,6 +89,13 @@ class APIClient {
     return response.data;
   }
 
+  async deleteSummary(documentId: string) {
+    await this.client.delete(`/summaries/${documentId}`);
+  }
+
+  // Document endpoints (stub for integration)
+  async listDocuments(skip = 0, limit = 50) {
+    const response = await this.client.get('/documents', {
   async getDocument(documentId: string) {
     const response = await this.client.get(`/v1/documents/${documentId}`);
     return response.data;
