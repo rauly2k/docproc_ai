@@ -1,0 +1,4 @@
+# Inherit from parent
+-r ../../requirements.txt
+
+# Additional worker-specific dependencies (if any)
