@@ -1,3 +1,17 @@
+"""API Gateway main application."""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from backend.shared.config import get_settings
+from .routes import ocr
+
+settings = get_settings()
+
+app = FastAPI(
+    title="Document AI API Gateway",
+    description="API Gateway for Document AI Processing Platform",
+    version="0.1.0"
 """API Gateway - Main FastAPI application."""
 
 from fastapi import FastAPI
@@ -86,6 +100,7 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
+    return {"status": "healthy", "service": "api-gateway"}
     return {
         "status": "healthy",
         "service": "api-gateway",
@@ -97,6 +112,8 @@ async def health_check():
 async def root():
     """Root endpoint."""
     return {
+        "message": "Document AI API Gateway",
+        "version": "0.1.0",
         "message": "Document AI API",
         "version": settings.api_version,
         "docs_url": "/docs"
@@ -149,6 +166,7 @@ async def root():
 
 
 # Include routers
+app.include_router(ocr.router, prefix="/v1/ocr", tags=["OCR"])
 app.include_router(invoices.router, prefix="/v1/invoices", tags=["Invoices"])
 app.include_router(auth.router, prefix="/v1/auth", tags=["Authentication"])
 app.include_router(documents.router, prefix="/v1/documents", tags=["Documents"])
@@ -162,6 +180,7 @@ app.include_router(admin.router, prefix="/v1/admin", tags=["Admin"])
 
 if __name__ == "__main__":
     import uvicorn
+    uvicorn.run(app, host=settings.api_host, port=settings.api_port)
     uvicorn.run(app, host="0.0.0.0", port=8000)
     uvicorn.run(
         "main:app",

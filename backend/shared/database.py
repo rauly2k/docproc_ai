@@ -19,6 +19,8 @@ engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
     pool_size=5,
+    max_overflow=10,
+    echo=False
     max_overflow=10
     pool_size=settings.db_pool_size,
     max_overflow=settings.db_max_overflow,
@@ -41,6 +43,10 @@ Base = declarative_base()
 
 def get_db() -> Generator[Session, None, None]:
     """
+    Get database session.
+
+    Yields:
+        Database session
     Dependency function to get database session.
 
     Usage in FastAPI:
@@ -55,6 +61,8 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
+def init_db():
+    """Initialize database (create tables)."""
 def init_db() -> None:
     """Initialize database (create all tables)."""
     Base.metadata.create_all(bind=engine)
