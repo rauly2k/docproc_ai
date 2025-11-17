@@ -24,6 +24,13 @@ venv/
 env/
 ENV/
 .venv
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Node
 node_modules/
@@ -34,6 +41,14 @@ yarn-error.log*
 dist/
 dist-ssr/
 *.local
+dist/
+.next/
+.cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
 
 # IDE
 .vscode/
@@ -62,6 +77,10 @@ firebase-credentials.json
 *.log
 docker-compose.override.yml
 
+# OS
+.DS_Store
+Thumbs.db
+
 # Database
 *.db
 *.sqlite
@@ -75,3 +94,11 @@ htmlcov/
 # Logs
 logs/
 *.log
+# GCP
+.gcloud/
+service-account-key.json
+
+# Build
+build/
+*.egg
+dist-info/
