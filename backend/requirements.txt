@@ -1,0 +1,62 @@
+# Core Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+alembic==1.13.1
+pgvector==0.2.4
+
+# Google Cloud
+google-cloud-storage==2.14.0
+google-cloud-pubsub==2.18.4
+google-cloud-documentai==2.24.0
+google-cloud-logging==3.9.0
+google-cloud-monitoring==2.18.0
+google-cloud-secret-manager==2.18.0
+
+# Vertex AI / Gemini
+google-cloud-aiplatform==1.40.0
+vertexai==1.40.0
+
+# Firebase Auth
+firebase-admin==6.3.0
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+
+# Redis for caching and rate limiting
+redis==5.0.1
+hiredis==2.3.2
+
+# Document Processing
+PyPDF2==3.0.1
+pypdfform==1.4.30
+Pillow==10.2.0
+
+# Text Processing
+langchain==0.1.0
+langchain-google-vertexai==0.0.6
+
+# Utilities
+python-dotenv==1.0.0
+httpx==0.26.0
+tenacity==8.2.3
+
+# Monitoring & Error Tracking
+sentry-sdk==1.40.0
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+httpx-mock==0.10.0
+
+# Development
+black==24.1.1
+flake8==7.0.0
+mypy==1.8.0
+bandit==1.7.6
+safety==2.3.5
