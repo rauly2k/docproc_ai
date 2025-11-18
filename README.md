@@ -34,6 +34,15 @@ This is a multi-vertical B2B SaaS platform for AI-driven document processing, ta
 - ✅ Document selection and source citations
 - ✅ Model quality selection (Gemini Flash/Pro)
 
+### Phase 6: Document Filling (Current)
+- ✅ Document filling worker with Document AI ID extraction
+- ✅ ID data extraction from Romanian ID cards, EU IDs, and passports
+- ✅ PDF form filling using PyPDFForm
+- ✅ Template system for different form types
+- ✅ Filling API endpoints
+- ✅ Frontend UI with template selection
+- ✅ Download filled PDFs
+
 ## Architecture
 
 ### Backend Services
@@ -144,9 +153,10 @@ docproc_ai/
 │   ├── api_gateway/      # Main API Gateway service
 │   └── workers/          # AI worker services
 │       ├── ocr_worker/   # OCR processing worker
-│       ├── invoice_worker/
-│       ├── summarizer_worker/
-│       └── ...
+│       ├── invoice_worker/  # Invoice processing worker
+│       ├── summarizer_worker/  # Text summarization worker
+│       ├── rag_ingest_worker/  # RAG document indexing worker
+│       └── docfill_worker/  # Document filling worker (Phase 6)
 ├── frontend/             # React frontend
 │   └── src/
 │       ├── components/
