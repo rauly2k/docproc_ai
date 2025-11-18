@@ -1,69 +1,6 @@
-"""Shared configuration management."""
-
-from pydantic_settings import BaseSettings
-from functools import lru_cache
-"""Configuration management for Document AI services."""
+"""Configuration management for DocProc AI services."""
 
 import os
-from functools import lru_cache
-from pydantic_settings import BaseSettings
-"""Configuration management for all backend services."""
-"""Configuration management using Pydantic Settings."""
-
-from pydantic_settings import BaseSettings
-from functools import lru_cache
-import os
-
-
-class Settings(BaseSettings):
-    """Application settings."""
-
-    # GCP
-    project_id: str = "docai-mvp-prod"
-    region: str = "europe-west1"
-    environment: str = "dev"
-
-    # Database
-    database_url: str = "postgresql://docai:password@localhost:5432/docai"
-    cloud_sql_connection_name: str = ""
-    db_user: str = "docai"
-    db_password: str = ""
-    db_name: str = "docai"
-
-    # Storage
-    gcs_bucket_uploads: str = "docai-mvp-prod-uploads-prod"
-    gcs_bucket_processed: str = "docai-mvp-prod-processed-prod"
-    gcs_bucket_temp: str = "docai-mvp-prod-temp-prod"
-
-    # Pub/Sub
-    pubsub_topic_invoice: str = "invoice-processing"
-    pubsub_topic_ocr: str = "ocr-processing"
-    pubsub_topic_summary: str = "summarization-processing"
-    pubsub_topic_rag_ingest: str = "rag-ingestion"
-    pubsub_topic_docfill: str = "document-filling"
-
-    # Environment
-    environment: str = os.getenv("ENVIRONMENT", "dev")
-
-    # GCP Configuration
-    project_id: str = os.getenv("PROJECT_ID", "docai-mvp-prod")
-    vertex_ai_location: str = os.getenv("VERTEX_AI_LOCATION", "us-central1")
-    region: str = os.getenv("REGION", "europe-west1")
-
-    # Database
-    database_url: str = os.getenv("DATABASE_URL", "postgresql://docai:password@localhost:5432/docai")
-    # GCP Settings
-    project_id: str = os.getenv("PROJECT_ID", "docai-mvp-prod")
-    region: str = os.getenv("REGION", "europe-west1")
-    environment: str = os.getenv("ENVIRONMENT", "dev")
-    # Project settings
-    project_id: str = os.getenv("PROJECT_ID", "docai-mvp-prod")
-    environment: str = os.getenv("ENVIRONMENT", "dev")
-    region: str = os.getenv("REGION", "europe-west1")
-"""Configuration management for Anima X services."""
-
-import os
-from typing import Optional
 from functools import lru_cache
 from pydantic_settings import BaseSettings
 
@@ -72,125 +9,64 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Application
-    app_name: str = "Anima X"
-    environment: str = "development"
-    debug: bool = True
+    environment: str = os.getenv("ENVIRONMENT", "dev")
+    debug: bool = os.getenv("DEBUG", "false").lower() == "true"
+
+    # GCP Configuration
+    project_id: str = os.getenv("PROJECT_ID", "docai-mvp-prod")
+    region: str = os.getenv("REGION", "europe-west1")
 
     # Database
     database_url: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://user:password@localhost:5432/docai_db"
-    )
-    db_password: str = os.getenv("DB_PASSWORD", "")
-
-    # GCS Buckets
-    gcs_bucket_uploads: str = f"docai-uploads-{environment}"
-    gcs_bucket_processed: str = f"docai-processed-{environment}"
-    gcs_bucket_temp: str = f"docai-temp-{environment}"
         "postgresql://docai:password@localhost:5432/docai"
     )
+    db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "5"))
+    db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "10"))
 
-    # Google Cloud Storage
-    gcs_bucket_uploads: str = os.getenv("GCS_BUCKET_UPLOADS", f"docai-uploads-{environment}")
-    gcs_bucket_processed: str = os.getenv("GCS_BUCKET_PROCESSED", f"docai-processed-{environment}")
-    gcs_bucket_temp: str = os.getenv("GCS_BUCKET_TEMP", f"docai-temp-{environment}")
+    # Google Cloud Storage Buckets
+    gcs_bucket_uploads: str = os.getenv("GCS_BUCKET_UPLOADS", f"docai-uploads-{os.getenv('ENVIRONMENT', 'dev')}")
+    gcs_bucket_processed: str = os.getenv("GCS_BUCKET_PROCESSED", f"docai-processed-{os.getenv('ENVIRONMENT', 'dev')}")
+    gcs_bucket_temp: str = os.getenv("GCS_BUCKET_TEMP", f"docai-temp-{os.getenv('ENVIRONMENT', 'dev')}")
 
-    # Pub/Sub Topics
+    # Google Pub/Sub Topics
     pubsub_topic_invoice: str = os.getenv("PUBSUB_TOPIC_INVOICE", "invoice-processing")
     pubsub_topic_ocr: str = os.getenv("PUBSUB_TOPIC_OCR", "ocr-processing")
     pubsub_topic_summary: str = os.getenv("PUBSUB_TOPIC_SUMMARY", "summarization-processing")
     pubsub_topic_rag_ingest: str = os.getenv("PUBSUB_TOPIC_RAG_INGEST", "rag-ingestion")
     pubsub_topic_docfill: str = os.getenv("PUBSUB_TOPIC_DOCFILL", "document-filling")
 
-    # Firebase
-    firebase_project_id: str = os.getenv("FIREBASE_PROJECT_ID", project_id)
-    pubsub_topic_invoice: str = "invoice-processing"
-    pubsub_topic_ocr: str = "ocr-processing"
-    pubsub_topic_summarization: str = "summarization-processing"
-    pubsub_topic_summary: str = "summarization-processing"
-    pubsub_topic_rag_ingest: str = "rag-ingestion"
-    pubsub_topic_rag_query: str = "rag-query"
-    pubsub_topic_docfill: str = "document-filling"
-
     # Document AI
-    documentai_location: str = "us"
+    documentai_location: str = os.getenv("DOCUMENTAI_LOCATION", "eu")
     documentai_invoice_processor_id: str = os.getenv("DOCUMENTAI_INVOICE_PROCESSOR_ID", "")
     documentai_ocr_processor_id: str = os.getenv("DOCUMENTAI_OCR_PROCESSOR_ID", "")
     documentai_id_processor_id: str = os.getenv("DOCUMENTAI_ID_PROCESSOR_ID", "")
 
     # Vertex AI
-    vertex_ai_location: str = "us-central1"
+    vertex_ai_location: str = os.getenv("VERTEX_AI_LOCATION", "us-central1")
+    vertex_ai_default_model: str = os.getenv("VERTEX_AI_DEFAULT_MODEL", "gemini-1.5-flash")
+    vertex_ai_embedding_model: str = os.getenv("VERTEX_AI_EMBEDDING_MODEL", "textembedding-gecko@003")
 
     # Firebase
-    firebase_project_id: str = "docai-mvp-prod"
-
-    # API
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
-    debug: bool = False
-
-    # Security
-    jwt_secret_key: str = "change-me-in-production"
-    jwt_algorithm: str = "HS256"
-    jwt_expiration_minutes: int = 60
-
-    class Config:
-        env_file = ".env"
+    firebase_project_id: str = os.getenv("FIREBASE_PROJECT_ID", os.getenv("PROJECT_ID", "docai-mvp-prod"))
     firebase_credentials_path: str = os.getenv("FIREBASE_CREDENTIALS_PATH", "")
 
-    # Security
-    encryption_key: str = os.getenv("ENCRYPTION_KEY", "")
-
     # API Settings
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
-    cors_origins: list = ["http://localhost:3000", "http://localhost:5173"]
-
-    # API Settings
+    api_host: str = os.getenv("API_HOST", "0.0.0.0")
+    api_port: int = int(os.getenv("API_PORT", "8080"))
     api_title: str = "Document AI API"
     api_version: str = "1.0.0"
-    cors_origins: list = ["http://localhost:5173", "http://localhost:3000"]
-        "postgresql://postgres:postgres@localhost:5432/animax_dev"
-    )
-    db_pool_size: int = 5
-    db_max_overflow: int = 10
 
-    # GCP Project
-    gcp_project_id: str = os.getenv("GCP_PROJECT_ID", "animax-mvp-prod")
-    gcp_region: str = os.getenv("GCP_REGION", "europe-west1")
-
-    # Google Cloud Storage
-    gcs_uploads_bucket: str = os.getenv("GCS_UPLOADS_BUCKET", "animax-uploads-dev")
-    gcs_processed_bucket: str = os.getenv("GCS_PROCESSED_BUCKET", "animax-processed-dev")
-    gcs_temp_bucket: str = os.getenv("GCS_TEMP_BUCKET", "animax-temp-dev")
-
-    # Google Pub/Sub Topics
-    pubsub_invoice_topic: str = "invoice-processing"
-    pubsub_ocr_topic: str = "ocr-processing"
-    pubsub_summarization_topic: str = "summarization-processing"
-    pubsub_rag_ingestion_topic: str = "rag-ingestion"
-    pubsub_rag_query_topic: str = "rag-query"
-    pubsub_docfill_topic: str = "document-filling"
-    pubsub_processing_complete_topic: str = "processing-complete"
-
-    # Firebase
-    firebase_credentials_path: Optional[str] = os.getenv("FIREBASE_CREDENTIALS_PATH")
-    firebase_project_id: Optional[str] = os.getenv("FIREBASE_PROJECT_ID")
-
-    # Vertex AI
-    vertex_ai_location: str = os.getenv("VERTEX_AI_LOCATION", "us-central1")
-    vertex_ai_default_model: str = "gemini-1.5-flash"
-    vertex_ai_embedding_model: str = "textembedding-gecko@003"
-
-    # Document AI
-    documentai_location: str = os.getenv("DOCUMENTAI_LOCATION", "eu")
-    documentai_invoice_processor_id: Optional[str] = os.getenv("DOCUMENTAI_INVOICE_PROCESSOR_ID")
-    documentai_ocr_processor_id: Optional[str] = os.getenv("DOCUMENTAI_OCR_PROCESSOR_ID")
-    documentai_id_processor_id: Optional[str] = os.getenv("DOCUMENTAI_ID_PROCESSOR_ID")
+    # CORS
+    cors_origins: list = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8080"
+    ]
 
     # File Upload
-    max_upload_size_mb: int = 10
-    allowed_mime_types: list[str] = [
+    max_upload_size_mb: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10"))
+    allowed_mime_types: list = [
         "application/pdf",
         "image/jpeg",
         "image/png",
@@ -200,15 +76,13 @@ class Settings(BaseSettings):
     ]
 
     # Security
-    cors_origins: list[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://animax.vercel.app"
-    ]
+    jwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
+    jwt_algorithm: str = "HS256"
+    jwt_expiration_minutes: int = int(os.getenv("JWT_EXPIRATION_MINUTES", "60"))
 
     # Rate Limiting
-    rate_limit_per_minute: int = 60
-    rate_limit_per_day: int = 1000
+    rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
+    rate_limit_per_day: int = int(os.getenv("RATE_LIMIT_PER_DAY", "1000"))
 
     class Config:
         env_file = ".env"
