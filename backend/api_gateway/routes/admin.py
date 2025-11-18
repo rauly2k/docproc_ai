@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from shared.database import get_db
-from shared.models import User, Document, InvoiceData, AuditLog
+from shared.models import User, Document, InvoiceData, OCRResult, DocumentSummary, AuditLog
 from shared.schemas import TenantStatsResponse, UserRoleUpdateRequest, SuccessResponse
 from middleware.auth_middleware import require_admin, get_current_user
 
@@ -30,6 +30,18 @@ async def get_tenant_stats(
     # Count invoices processed
     total_invoices = db.query(InvoiceData).filter(InvoiceData.tenant_id == tenant_id).count()
 
+    # Count OCR results
+    total_ocr = db.query(OCRResult).filter(OCRResult.tenant_id == tenant_id).count()
+
+    # Count summaries generated
+    total_summaries = db.query(DocumentSummary).filter(DocumentSummary.tenant_id == tenant_id).count()
+
+    # Count RAG queries from audit logs
+    total_rag_queries = db.query(AuditLog).filter(
+        AuditLog.tenant_id == tenant_id,
+        AuditLog.action == 'rag_query'
+    ).count()
+
     # Calculate storage used
     storage_query = db.query(Document).filter(Document.tenant_id == tenant_id)
     total_storage = sum([doc.file_size_bytes or 0 for doc in storage_query.all()])
@@ -38,9 +50,9 @@ async def get_tenant_stats(
         tenant_id=tenant_id,
         total_documents=total_documents,
         total_invoices_processed=total_invoices,
-        total_ocr_processed=0,  # TODO: Implement
-        total_summaries_generated=0,  # TODO: Implement
-        total_rag_queries=0,  # TODO: Implement
+        total_ocr_processed=total_ocr,
+        total_summaries_generated=total_summaries,
+        total_rag_queries=total_rag_queries,
         storage_used_bytes=total_storage
     )
 

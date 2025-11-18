@@ -10,10 +10,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from shared.database import get_db
 from shared.models import Document, DocumentFillingResult
-from shared.schemas import DocumentFillingRequest, DocumentFillingResponse, JobStatusResponse
+from shared.schemas import DocumentFillingRequest, DocumentFillingResponse, JobStatusResponse, TemplateListResponse, TemplateInfo
 from shared.pubsub import publish_document_filling_job
 from middleware.auth_middleware import get_current_user
 from middleware.tenant_middleware import get_tenant_filter, TenantFilter
+from pathlib import Path
+import json
 
 router = APIRouter()
 
@@ -74,13 +76,68 @@ async def get_filling_result(
     return result
 
 
-@router.get("/templates", response_model=list)
+@router.get("/templates", response_model=TemplateListResponse)
 async def list_templates(
     current_user: dict = Depends(get_current_user)
 ):
     """List available PDF form templates."""
-    # TODO: Implement template listing
-    return [
-        {"name": "romanian_id_form", "description": "Romanian ID Card Form"},
-        {"name": "generic_form", "description": "Generic Personal Information Form"}
-    ]
+    templates = []
+
+    # Path to templates directory
+    templates_dir = Path(__file__).parent.parent.parent / "workers" / "docfill_worker" / "templates"
+
+    if not templates_dir.exists():
+        # Return default templates if directory doesn't exist
+        return TemplateListResponse(
+            templates=[
+                TemplateInfo(
+                    name="cerere_inscriere_fiscala",
+                    display_name="Cerere Înscriere Fiscală",
+                    description="Formular pentru înregistrarea fiscală",
+                    required_fields=["nume", "prenume", "cnp", "adresa"]
+                ),
+                TemplateInfo(
+                    name="declaratie_590",
+                    display_name="Declarație 590",
+                    description="Declarație fiscală 590",
+                    required_fields=["nume", "cnp", "adresa"]
+                )
+            ]
+        )
+
+    # Scan templates directory for PDF files
+    for template_file in templates_dir.glob("*.pdf"):
+        template_name = template_file.stem
+
+        # Try to load metadata from companion JSON file
+        metadata_file = templates_dir / f"{template_name}.json"
+
+        if metadata_file.exists():
+            try:
+                with open(metadata_file) as f:
+                    metadata = json.load(f)
+
+                templates.append(TemplateInfo(
+                    name=template_name,
+                    display_name=metadata.get("display_name", template_name.replace("_", " ").title()),
+                    description=metadata.get("description", ""),
+                    required_fields=metadata.get("required_fields", [])
+                ))
+            except Exception as e:
+                # If metadata loading fails, use defaults
+                templates.append(TemplateInfo(
+                    name=template_name,
+                    display_name=template_name.replace("_", " ").title(),
+                    description=f"PDF template: {template_name}",
+                    required_fields=[]
+                ))
+        else:
+            # No metadata file, use defaults
+            templates.append(TemplateInfo(
+                name=template_name,
+                display_name=template_name.replace("_", " ").title(),
+                description=f"PDF template: {template_name}",
+                required_fields=[]
+            ))
+
+    return TemplateListResponse(templates=templates)
