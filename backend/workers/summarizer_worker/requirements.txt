@@ -1,7 +1,6 @@
-# Inherit from parent
--r ../../requirements.txt
+# Inherit shared dependencies
+-r ../../shared/requirements.txt
 
-# Additional dependencies
-PyPDF2==3.0.1
+# AI/ML for text summarization
 langchain==0.0.340
 langchain-google-vertexai==0.0.6

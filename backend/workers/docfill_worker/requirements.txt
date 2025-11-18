@@ -1,7 +1,6 @@
-# Inherit from parent
--r ../../requirements.txt
+# Inherit shared dependencies
+-r ../../shared/requirements.txt
 
-# Additional dependencies for document filling
+# PDF form filling
 pypdfform==1.4.30
 pillow==10.1.0
-python-dateutil==2.8.2

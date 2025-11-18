@@ -1,7 +1,7 @@
-# Inherit from parent
+# Inherit shared dependencies
 -r ../../shared/requirements.txt
 
-# Additional dependencies for RAG
+# AI/ML for RAG ingestion
 langchain==0.0.340
 langchain-google-vertexai==0.0.6
 tiktoken==0.5.1

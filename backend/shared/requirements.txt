@@ -1,8 +1,9 @@
-# Core FastAPI dependencies
+# Core FastAPI
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
+python-multipart==0.0.6
 
 # Database
 sqlalchemy==2.0.23
@@ -10,23 +11,24 @@ psycopg2-binary==2.9.9
 alembic==1.13.0
 pgvector==0.2.4
 
-# Firebase
+# Firebase Authentication
 firebase-admin==6.3.0
 
-# Google Cloud
+# Google Cloud Platform
 google-cloud-storage==2.10.0
 google-cloud-pubsub==2.18.4
 google-cloud-aiplatform==1.38.1
-google-cloud-documentai==2.20.0
+google-cloud-documentai==2.24.0
+google-cloud-vision==3.4.5
+google-cloud-secretmanager==2.16.4
 
-# PDF processing
-PyPDF2==3.0.1
-pypdfform==1.4.0
-
-# HTTP
+# HTTP Clients
 requests==2.31.0
-httpx==0.25.0
+httpx==0.25.2
 
 # Utilities
 python-dotenv==1.0.0
-python-multipart==0.0.6
+python-dateutil==2.8.2
+
+# PDF Processing (basic)
+PyPDF2==3.0.1

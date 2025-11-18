@@ -1,0 +1,17 @@
+# Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in your values
+
+# GCP Project Configuration
+project_id = "docai-mvp-prod"
+region     = "europe-west1"
+environment = "prod"
+
+# Database Configuration
+database_version = "POSTGRES_15"
+database_tier    = "db-f1-micro"  # Use db-custom-1-3840 or higher for production
+
+# CORS Configuration
+allowed_cors_origins = [
+  "https://docproc-ai.vercel.app",
+  "http://localhost:5173"
+]

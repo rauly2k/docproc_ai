@@ -1,0 +1,85 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages
+        uses: wagoid/commitlint-github-action@v5
+        continue-on-error: true
+
+      - name: Check for TODO/FIXME
+        run: |
+          echo "Checking for TODO/FIXME in changed files..."
+          git diff --name-only origin/${{ github.base_ref }}...HEAD | \
+            xargs grep -n "TODO\|FIXME" || echo "No TODOs or FIXMEs found"
+        continue-on-error: true
+
+      - name: Detect secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+      - name: Check file sizes
+        run: |
+          echo "Checking for large files..."
+          find . -type f -size +10M -not -path "./.git/*" | \
+            while read file; do
+              echo "WARNING: Large file detected: $file ($(du -h "$file" | cut -f1))"
+            done
+
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r shared/requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run security check with bandit
+        run: |
+          pip install bandit
+          bandit -r backend/ -ll
+        continue-on-error: true
+
+      - name: Check for hardcoded secrets
+        run: |
+          pip install detect-secrets
+          detect-secrets scan --baseline .secrets.baseline
+        continue-on-error: true
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3

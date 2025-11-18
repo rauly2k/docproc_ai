@@ -1,0 +1,152 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: europe-west1
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r shared/requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run Black (code formatting check)
+        run: |
+          cd backend
+          black --check .
+
+      - name: Run Ruff (linting)
+        run: |
+          cd backend
+          ruff check .
+
+      - name: Run MyPy (type checking)
+        run: |
+          cd backend
+          mypy shared/ api_gateway/ workers/ --ignore-missing-imports
+        continue-on-error: true
+
+      - name: Run tests
+        run: |
+          cd backend
+          pytest tests/ -v --cov=. --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+
+  build-and-push:
+    name: Build and Push Docker Images
+    needs: lint-and-test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - api_gateway
+          - invoice_worker
+          - ocr_worker
+          - summarizer_worker
+          - rag_ingest_worker
+          - docfill_worker
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build Docker image
+        run: |
+          SERVICE_PATH=$(echo "${{ matrix.service }}" | tr '_' '/')
+          cd backend
+
+          if [ "${{ matrix.service }}" = "api_gateway" ]; then
+            docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/docai-images/api-gateway:${{ github.sha }} \
+                         -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/docai-images/api-gateway:latest \
+                         -f api_gateway/Dockerfile .
+          else
+            docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/docai-images/${{ matrix.service }}:${{ github.sha }} \
+                         -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/docai-images/${{ matrix.service }}:latest \
+                         -f workers/${{ matrix.service }}/Dockerfile .
+          fi
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/docai-images/${{ matrix.service }}:${{ github.sha }}
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/docai-images/${{ matrix.service }}:latest
+
+  deploy:
+    name: Deploy to Cloud Run
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - api-gateway
+          - invoice-worker
+          - ocr-worker
+          - summarizer-worker
+          - rag-ingest-worker
+          - docfill-worker
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy docai-${{ matrix.service }}-prod \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/docai-images/${{ matrix.service }}:latest \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --min-instances 1 \
+            --max-instances 10

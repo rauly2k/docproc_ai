@@ -1,4 +1,5 @@
-# Inherit from parent
--r ../../requirements.txt
+# Inherit shared dependencies
+-r ../../shared/requirements.txt
 
-# Additional worker-specific dependencies (if any)
+# No additional dependencies needed for OCR worker
+# Document AI and Vision API handle OCR extraction
