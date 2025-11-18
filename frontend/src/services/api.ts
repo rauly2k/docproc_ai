@@ -260,6 +260,31 @@ class APIClient {
     // TODO: Implement document endpoint
     return { id: documentId, gcs_path: '' };
   }
+
+  // ===== Document Filling Methods =====
+
+  async getFillingTemplates() {
+    const response = await this.client.get('/v1/filling/templates');
+    return response.data;
+  }
+
+  async extractAndFill(documentId: string, templateName: string) {
+    const response = await this.client.post('/v1/filling/extract-and-fill', {
+      document_id: documentId,
+      template_name: templateName,
+    });
+    return response.data;
+  }
+
+  async getFillingResult(documentId: string) {
+    const response = await this.client.get(`/v1/filling/${documentId}`);
+    return response.data;
+  }
+
+  async getFilledPdfDownloadUrl(documentId: string) {
+    const response = await this.client.get(`/v1/filling/${documentId}/download`);
+    return response.data;
+  }
 }
 
 export const apiClient = new APIClient();
