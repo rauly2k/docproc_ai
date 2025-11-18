@@ -1,116 +1,10 @@
-"""Pydantic schemas for API request/response models."""
-
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
-from datetime import datetime
-from uuid import UUID
-
-
-"""Pydantic schemas for request/response validation."""
-
-from pydantic import BaseModel, Field, EmailStr
-from typing import List, Optional, Dict, Any
-from datetime import datetime
-from uuid import UUID
-
-
-# Authentication schemas
-class UserSignup(BaseModel):
-    """User signup request."""
-    email: EmailStr
-    password: str = Field(..., min_length=8)
-    full_name: str
-    tenant_name: str
-
-
-class UserLogin(BaseModel):
 """Pydantic schemas for API request/response validation."""
 
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List, Dict, Any
 from datetime import datetime, date
-from uuid import UUID
-from decimal import Decimal
-
-
-# ===== Auth Schemas =====
-
-class UserSignupRequest(BaseModel):
-    email: EmailStr
-    password: str = Field(..., min_length=8)
-    full_name: str
-
-
-class UserLoginRequest(BaseModel):
-"""Pydantic schemas for request/response validation."""
-
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
-from datetime import datetime, date
-from decimal import Decimal
-from uuid import UUID
-
-
-# Base schemas
-class TenantBase(BaseModel):
-    name: str
-    subdomain: Optional[str] = None
-
-
-class TenantCreate(TenantBase):
-    pass
-
-
-class TenantResponse(TenantBase):
-    id: UUID
-    created_at: datetime
-    is_active: bool
-
-    class Config:
-        from_attributes = True
-
-
-# User schemas
-class UserBase(BaseModel):
-    email: EmailStr
-    full_name: Optional[str] = None
-
-
-class UserCreate(UserBase):
-    password: str = Field(..., min_length=8)
-    tenant_name: str = Field(..., min_length=1, max_length=255)
-
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-    tenant_name: str
-
-
-class UserResponse(UserBase):
-    id: UUID
-    tenant_id: UUID
-    role: str
-    is_active: bool
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserResponse
-    created_at: datetime
-    is_active: bool
-"""Pydantic schemas for API request/response validation."""
-
-from datetime import datetime
 from typing import Optional, List, Dict, Any
 from decimal import Decimal
 from uuid import UUID
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field
 
 
 # ============================================================================
@@ -121,8 +15,8 @@ class UserSignupRequest(BaseModel):
     """User signup request."""
     email: EmailStr
     password: str = Field(..., min_length=8)
-    full_name: Optional[str] = None
-    tenant_name: Optional[str] = None  # For creating new tenant
+    full_name: str
+    tenant_name: str = Field(..., min_length=1, max_length=255)
 
 
 class UserLoginRequest(BaseModel):
@@ -132,15 +26,6 @@ class UserLoginRequest(BaseModel):
 
 
 class UserResponse(BaseModel):
-    """User response."""
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user_id: str
-
-
-class UserResponse(BaseModel):
-class UserResponse(BaseModel):
     """User information response."""
     id: UUID
     email: str
@@ -149,37 +34,19 @@ class UserResponse(BaseModel):
     tenant_id: UUID
     created_at: datetime
     last_login: Optional[datetime]
+    is_active: bool
 
     class Config:
         from_attributes = True
 
 
-# Document schemas
-class DocumentUpload(BaseModel):
-    """Document upload metadata."""
-# ===== Document Schemas =====
-
-class DocumentUploadResponse(BaseModel):
-# Document schemas
-class DocumentUpload(BaseModel):
-    document_type: str = Field(..., pattern="^(invoice|contract|id|generic)$")
+class TokenResponse(BaseModel):
+    """Authentication token response."""
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 
-class DocumentResponse(BaseModel):
-    """Document response."""
-    id: UUID
-    filename: str
-    document_type: str
-    status: str
-    gcs_path: str
-    created_at: datetime
-    processing_started_at: Optional[datetime] = None
-    processing_completed_at: Optional[datetime] = None
-    file_size_bytes: Optional[int]
-    gcs_path: str
-    rag_indexed: bool = False
-    created_at: datetime
-    updated_at: datetime
 # ============================================================================
 # Document Schemas
 # ============================================================================
@@ -194,109 +61,32 @@ class DocumentUploadResponse(BaseModel):
 
 
 class DocumentResponse(BaseModel):
-    id: UUID
-    filename: str
-class DocumentMetadata(BaseModel):
-    """Document metadata update."""
-    document_type: Optional[str] = None
-    filename: Optional[str] = None
-
-
-class DocumentResponse(BaseModel):
     """Document details response."""
     id: UUID
     tenant_id: UUID
     user_id: UUID
     filename: str
-    mime_type: Optional[str]
-    file_size_bytes: Optional[int]
-    document_type: Optional[str]
-    gcs_path: str
-    status: str
-    created_at: datetime
-    processing_started_at: Optional[datetime]
-    processing_completed_at: Optional[datetime]
-    error_message: Optional[str]
     original_filename: Optional[str]
     mime_type: Optional[str]
     file_size_bytes: Optional[int]
     document_type: Optional[str]
+    gcs_path: str
+    gcs_processed_path: Optional[str]
     status: str
+    processing_started_at: Optional[datetime]
+    processing_completed_at: Optional[datetime]
+    error_message: Optional[str]
     ocr_completed: bool
     invoice_parsed: bool
     summarized: bool
     rag_indexed: bool
     created_at: datetime
     updated_at: datetime
-    processing_started_at: Optional[datetime]
-    processing_completed_at: Optional[datetime]
-    error_message: Optional[str]
 
     class Config:
         from_attributes = True
 
 
-# Summary schemas
-class SummaryRequest(BaseModel):
-    """Request to generate summary."""
-    model_preference: str = Field(default="auto", pattern="^(auto|flash|pro)$")
-    summary_type: str = Field(default="concise", pattern="^(concise|detailed)$")
-# Chat schemas
-class ChatQueryRequest(BaseModel):
-    """Request to query documents via chat."""
-    question: str = Field(..., min_length=1, max_length=500)
-    document_ids: Optional[List[UUID]] = None  # If None, search all documents
-    max_chunks: int = Field(default=5, ge=1, le=10)
-    model: str = Field(default="flash", pattern="^(flash|pro)$")
-
-
-class ChatSource(BaseModel):
-    """Source chunk for chat answer."""
-    document_id: UUID
-    chunk_index: int
-    content: str
-    relevance_score: float
-    metadata: Dict[str, Any]
-
-
-class ChatResponse(BaseModel):
-    """Chat response with answer and sources."""
-    answer: str
-    sources: List[ChatSource]
-    model_used: str
-    total_chunks_searched: int
-
-
-# Summary schemas
-class SummaryRequest(BaseModel):
-    """Request to generate summary."""
-    document_id: UUID
-    use_premium: bool = False
-
-
-class SummaryResponse(BaseModel):
-    """Summary response."""
-    id: UUID
-    document_id: UUID
-    summary: str
-    key_points: List[str]
-    word_count: int
-    model_used: str
-    model_used: str
-    word_count: int
-class DocumentListResponse(BaseModel):
-# Invoice schemas
-class LineItem(BaseModel):
-    description: Optional[str]
-    quantity: Optional[int]
-    unit_price: Optional[Decimal]
-    amount: Optional[Decimal]
-
-    class Config:
-        from_attributes = True
-
-
-class InvoiceDataResponse(BaseModel):
 class DocumentListResponse(BaseModel):
     """Paginated document list."""
     documents: List[DocumentResponse]
@@ -305,16 +95,6 @@ class DocumentListResponse(BaseModel):
     page_size: int
 
 
-# ===== Invoice Schemas =====
-
-class LineItem(BaseModel):
-    description: str
-    quantity: Optional[float]
-    unit_price: Optional[Decimal]
-    amount: Decimal
-
-
-class InvoiceDataResponse(BaseModel):
 # ============================================================================
 # Invoice Schemas
 # ============================================================================
@@ -322,9 +102,12 @@ class InvoiceDataResponse(BaseModel):
 class LineItem(BaseModel):
     """Invoice line item."""
     description: str
-    quantity: float
-    unit_price: Decimal
+    quantity: Optional[float]
+    unit_price: Optional[Decimal]
     amount: Decimal
+
+    class Config:
+        from_attributes = True
 
 
 class InvoiceProcessRequest(BaseModel):
@@ -342,20 +125,14 @@ class InvoiceDataResponse(BaseModel):
     invoice_number: Optional[str]
     invoice_date: Optional[date]
     due_date: Optional[date]
-    invoice_date: Optional[datetime]
-    due_date: Optional[datetime]
     subtotal: Optional[Decimal]
     tax_amount: Optional[Decimal]
     total_amount: Optional[Decimal]
     currency: str
     line_items: List[Dict[str, Any]]
     is_validated: bool
-    line_items: List[LineItem]
-    is_validated: bool
     validated_at: Optional[datetime]
-    line_items: List[Dict[str, Any]]
-    is_validated: bool
-    confidence_score: Optional[float] = None
+    validation_notes: Optional[str]
     created_at: datetime
 
     class Config:
@@ -363,62 +140,12 @@ class InvoiceDataResponse(BaseModel):
 
 
 class InvoiceValidationRequest(BaseModel):
-    corrections: Dict[str, Any]
-    validation_notes: Optional[str]
-    is_approved: bool
-
-
-class InvoiceProcessRequest(BaseModel):
-    document_id: UUID
-
-
-# ===== OCR Schemas =====
-
-class OCRExtractRequest(BaseModel):
-    document_id: UUID
-    method: Optional[str] = "auto"  # auto, documentai, vision, gemini
-
-
-class OCRResultResponse(BaseModel):
-    id: UUID
-    document_id: UUID
-    extracted_text: str
-    confidence_score: Optional[float]
-    page_count: Optional[int]
-    ocr_method: Optional[str]
-class InvoiceValidation(BaseModel):
-    """Validation/correction data from user."""
-    corrections: dict
-class InvoiceValidationRequest(BaseModel):
     """Human validation/correction of invoice data."""
     corrections: Dict[str, Any]
     validation_notes: Optional[str] = None
     is_approved: bool
 
 
-# Auth schemas
-class SignupRequest(BaseModel):
-    email: EmailStr
-    password: str = Field(..., min_length=8)
-    full_name: str
-    tenant_name: str
-
-
-class SignupResponse(BaseModel):
-    user_id: UUID
-    tenant_id: UUID
-    email: str
-    message: str
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
 # ============================================================================
 # OCR Schemas
 # ============================================================================
@@ -426,7 +153,7 @@ class TokenResponse(BaseModel):
 class OCRExtractRequest(BaseModel):
     """Request to extract text from document."""
     document_id: UUID
-    ocr_method: Optional[str] = "document-ai"  # 'document-ai', 'vision-api', 'gemini-vision'
+    ocr_method: Optional[str] = "document-ai"
 
 
 class OCRResultResponse(BaseModel):
@@ -443,20 +170,6 @@ class OCRResultResponse(BaseModel):
         from_attributes = True
 
 
-# ===== Summary Schemas =====
-
-class SummaryGenerateRequest(BaseModel):
-    document_id: UUID
-    model: Optional[str] = "gemini-1.5-flash"  # gemini-1.5-flash, gemini-1.5-pro, claude-3-sonnet
-
-
-class SummaryResponse(BaseModel):
-    id: UUID
-    document_id: UUID
-    summary: str
-    model_used: Optional[str]
-    word_count: Optional[int]
-    key_points: Optional[Dict[str, Any]]
 # ============================================================================
 # Summarization Schemas
 # ============================================================================
@@ -464,7 +177,7 @@ class SummaryResponse(BaseModel):
 class SummarizationRequest(BaseModel):
     """Request to generate document summary."""
     document_id: UUID
-    model: Optional[str] = "gemini-1.5-flash"  # Model to use
+    model: Optional[str] = "gemini-1.5-flash"
     max_words: Optional[int] = 200
 
 
@@ -482,7 +195,40 @@ class SummaryResponse(BaseModel):
         from_attributes = True
 
 
-# Chunk schemas
+# ============================================================================
+# Chat with PDF (RAG) Schemas
+# ============================================================================
+
+class ChatIndexRequest(BaseModel):
+    """Request to index document for chat."""
+    document_id: UUID
+
+
+class ChatQueryRequest(BaseModel):
+    """Request to query documents."""
+    document_ids: List[UUID]
+    question: str
+    max_chunks: int = 5
+    model: str = "gemini-1.5-flash"
+
+
+class ChatSource(BaseModel):
+    """Source chunk for RAG answer."""
+    document_id: UUID
+    chunk_index: int
+    relevance_score: float
+    content: str
+    metadata: Optional[Dict[str, Any]] = {}
+
+
+class ChatQueryResponse(BaseModel):
+    """Response to chat query."""
+    answer: str
+    sources: List[ChatSource]
+    model_used: str
+    total_chunks_searched: int
+
+
 class ChunkInfo(BaseModel):
     """Chunk information for debugging."""
     chunk_index: int
@@ -496,62 +242,16 @@ class ChunksResponse(BaseModel):
     document_id: UUID
     total_chunks: int
     chunks: List[ChunkInfo]
-# ===== Chat/RAG Schemas =====
-
-class ChatIndexRequest(BaseModel):
-# ============================================================================
-# Chat with PDF (RAG) Schemas
-# ============================================================================
-
-class ChatIndexRequest(BaseModel):
-    """Request to index document for chat."""
-    document_id: UUID
 
 
-class ChatQueryRequest(BaseModel):
-    document_ids: List[UUID]
-    question: str
-    max_chunks: Optional[int] = 5
-
-
-class ChatSource(BaseModel):
-    """Request to query documents."""
-    document_ids: List[UUID]
-    question: str
-    max_chunks: int = 5
-
-
-class ChatSource(BaseModel):
-    """Source chunk for RAG answer."""
-    document_id: UUID
-    chunk_index: int
-    relevance_score: float
-    content: str
-
-
-class ChatQueryResponse(BaseModel):
-    """Response to chat query."""
-    answer: str
-    sources: List[ChatSource]
-    model_used: str
-
-
-# ===== Document Filling Schemas =====
-
-class DocumentFillingRequest(BaseModel):
-    document_id: UUID  # ID card or source document
-    template_name: str
-
-
-class DocumentFillingResponse(BaseModel):
 # ============================================================================
 # Document Filling Schemas
 # ============================================================================
 
 class DocumentFillingRequest(BaseModel):
     """Request to extract ID and fill PDF form."""
-    document_id: UUID  # ID card/document to extract from
-    template_name: str  # PDF template to fill
+    document_id: UUID
+    template_name: str
 
 
 class DocumentFillingResponse(BaseModel):
@@ -568,18 +268,19 @@ class DocumentFillingResponse(BaseModel):
         from_attributes = True
 
 
-# ===== Generic Responses =====
+class TemplateInfo(BaseModel):
+    """PDF template information."""
+    name: str
+    display_name: str
+    description: Optional[str]
+    required_fields: Optional[List[str]]
 
-class JobStartedResponse(BaseModel):
-    message: str
-    document_id: UUID
-    status: str = "processing"
+
+class TemplateListResponse(BaseModel):
+    """List of available templates."""
+    templates: List[TemplateInfo]
 
 
-class ErrorResponse(BaseModel):
-    error: str
-    detail: Optional[str]
-    status_code: int
 # ============================================================================
 # Admin Schemas
 # ============================================================================
@@ -601,6 +302,31 @@ class UserRoleUpdateRequest(BaseModel):
 
 
 # ============================================================================
+# Generic Response Schemas
+# ============================================================================
+
+class ErrorResponse(BaseModel):
+    """Standard error response."""
+    error: str
+    detail: Optional[str] = None
+    status_code: int
+
+
+class SuccessResponse(BaseModel):
+    """Generic success response."""
+    success: bool
+    message: str
+
+
+class JobStatusResponse(BaseModel):
+    """Async job status response."""
+    job_id: str
+    status: str
+    message: str
+    estimated_completion: Optional[datetime] = None
+
+
+# ============================================================================
 # Pub/Sub Message Schemas
 # ============================================================================
 
@@ -613,32 +339,3 @@ class PubSubJobMessage(BaseModel):
     document_type: str
     options: Optional[Dict[str, Any]] = {}
     callback_url: Optional[str] = None
-
-
-# ============================================================================
-# Error Schemas
-# ============================================================================
-
-class ErrorResponse(BaseModel):
-    """Standard error response."""
-    error: str
-    detail: Optional[str] = None
-    status_code: int
-
-
-# ============================================================================
-# Generic Response Schemas
-# ============================================================================
-
-class JobStatusResponse(BaseModel):
-    """Async job status response."""
-    job_id: str
-    status: str  # 'processing', 'completed', 'failed'
-    message: str
-    estimated_completion: Optional[datetime] = None
-
-
-class SuccessResponse(BaseModel):
-    """Generic success response."""
-    success: bool
-    message: str
